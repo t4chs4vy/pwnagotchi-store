@@ -29,12 +29,14 @@
             padding: 40px 20px;
         }
 
+        a { text-decoration: none; color: inherit; }
+
         /* Header */
-        header { text-align: center; margin-bottom: 50px; }
+        header { text-align: center; margin-bottom: 40px; }
 
         /* The Face Style */
         .pwn-face {
-            font-family: 'Arial', sans-serif; /* Standard font renders the circles better */
+            font-family: 'Arial', sans-serif;
             font-size: 3.5rem;
             color: var(--text-main);
             margin-bottom: 5px;
@@ -43,43 +45,56 @@
 
         h1 { 
             font-family: var(--font-pixel);
-            font-weight: 400; 
-            margin: 0; 
-            font-size: 4rem; /* Big Pixel Text */
-            color: #fff; 
-            line-height: 0.8;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-weight: 400; margin: 0; font-size: 4rem; color: #fff; 
+            line-height: 0.8; text-transform: uppercase; letter-spacing: 2px;
         }
         
         .subtitle { 
-            color: var(--text-muted); font-size: 1rem; margin-top: 10px; font-weight: 500; 
-            letter-spacing: 1px; text-transform: uppercase;
+            color: var(--text-muted); font-size: 1rem; margin-top: 10px; 
+            font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
         }
 
         .credits {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #666; 
-            font-family: var(--font-main);
-            font-weight: 500;
+            margin-top: 10px; font-size: 0.85rem; color: #666; 
+            font-family: var(--font-main); font-weight: 500;
         }
-        .credits a { color: #666; text-decoration: none; transition: color 0.2s; }
         .credits a:hover { color: var(--accent); }
 
-        /* Search */
-        .search-container { max-width: 600px; margin: 0 auto 50px auto; }
-        input#search {
-            width: 100%;
-            padding: 16px 25px;
-            background: #1a1a1a;
+        /* SOCIAL NAV BAR */
+        .social-nav {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            font-family: var(--font-pixel);
+            font-size: 1.3rem;
+            color: var(--text-muted);
             border: 1px solid #333;
-            border-radius: 50px;
-            color: #fff;
-            font-size: 1.2rem; /* Larger font for input */
-            font-family: var(--font-pixel); /* Pixel font input */
-            outline: none;
-            transition: all 0.3s ease;
+            padding: 5px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            background: #1a1a1a;
+        }
+
+        .social-link:hover {
+            color: #000;
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+        }
+
+        /* Search */
+        .search-container { max-width: 600px; margin: 0 auto 40px auto; }
+        input#search {
+            width: 100%; padding: 16px 25px; background: #1a1a1a;
+            border: 1px solid #333; border-radius: 50px; color: #fff;
+            font-size: 1.2rem; font-family: var(--font-pixel);
+            outline: none; transition: all 0.3s ease;
         }
         input#search:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(76, 175, 80, 0.1); }
         input#search::placeholder { color: #555; }
@@ -122,12 +137,24 @@
 
         .card h2 { 
             margin: 0; font-size: 1.4rem; color: var(--accent); 
-            font-family: var(--font-pixel); /* Pixel font headers */
-            font-weight: 400;
-            letter-spacing: 1px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            max-width: 75%;
+            font-family: var(--font-pixel); font-weight: 400;
+            letter-spacing: 1px; white-space: nowrap; overflow: hidden; 
+            text-overflow: ellipsis; max-width: 65%;
         }
+
+        /* Repo Link Style */
+        .repo-link {
+            font-family: var(--font-pixel);
+            font-size: 1rem;
+            color: #555;
+            border: 1px solid #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        .repo-link:hover { color: #fff; border-color: #fff; }
+
+        .meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
         .version-badge {
             background: #2a2a2a; font-size: 0.8rem; padding: 2px 8px; 
@@ -135,31 +162,22 @@
         }
 
         .author { 
-            font-size: 0.8rem; color: #555; margin-bottom: 15px; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 0.8rem; color: #555; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%;
         }
         
         .desc { 
             font-size: 0.9rem; color: #bbb; line-height: 1.5; 
-            overflow: hidden;
-            height: 4.5em; 
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+            overflow: hidden; height: 4.5em; 
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
         }
 
         /* Hover Button */
         .install-overlay {
-            position: absolute;
-            bottom: 0; left: 0; width: 100%;
-            padding: 20px;
+            position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px;
             background: linear-gradient(to top, var(--card-bg) 40%, transparent);
-            transform: translateY(100%);
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            height: 100px; 
+            transform: translateY(100%); transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; justify-content: center; align-items: flex-end; height: 100px; 
         }
 
         .card:hover .install-overlay { transform: translateY(0); }
@@ -167,14 +185,10 @@
         button.install-btn {
             width: auto; min-width: 120px; padding: 8px 24px;
             background: var(--accent); color: #000; border: none;
-            border-radius: 50px; 
-            font-family: var(--font-pixel); /* Pixel font button */
-            font-size: 1.2rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            border-radius: 50px; font-family: var(--font-pixel); font-size: 1.2rem;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
             text-transform: uppercase;
         }
-        
         button.install-btn:hover { background: #fff; }
 
         @media (hover: none) {
@@ -215,6 +229,13 @@
         <div class="credits">
             Built by WPA2 &bull; <a href="https://buymeacoffee.com/wpa2" target="_blank">Buy me a coffee</a>
         </div>
+        
+        <nav class="social-nav">
+            <a href="https://discord.gg/pwnagotchi" target="_blank" class="social-link">[DISCORD]</a>
+            <a href="https://github.com/" target="_blank" class="social-link">[GITHUB]</a>
+            <a href="https://reddit.com/r/pwnagotchi" target="_blank" class="social-link">[REDDIT]</a>
+            <a href="https://pwnagotchi.org" target="_blank" class="social-link">[PWNAGOTCHI.ORG]</a>
+        </nav>
     </header>
 
     <div class="search-container">
@@ -244,18 +265,34 @@
             const grid = document.getElementById('plugin-grid');
             grid.innerHTML = "";
             list.forEach(p => {
+                // 1. Clean Author
                 let cleanAuthor = p.author.replace(/<[^>]*>/g, "").trim().replace(/[\w\.-]+@[\w\.-]+/g, "").trim().replace(/^[0-9]+\+/, "").trim();
                 if(cleanAuthor.length > 20) cleanAuthor = cleanAuthor.substring(0, 18) + "...";
                 if(cleanAuthor.length === 0) cleanAuthor = "Unknown";
+
+                // 2. Calculate Repo URL (Smart Guessing)
+                let repoUrl = p.download_url;
+                if(repoUrl.includes('/archive/')) {
+                    // Zip link -> Repo root
+                    repoUrl = repoUrl.split('/archive/')[0];
+                } else if(repoUrl.includes('raw.githubusercontent.com')) {
+                    // Raw file -> Blob view
+                    repoUrl = repoUrl.replace('raw.githubusercontent.com', 'github.com')
+                                     .replace('/main/', '/blob/main/')
+                                     .replace('/master/', '/blob/master/');
+                }
 
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
                     <div class="card-header">
                         <h2>${p.name}</h2>
+                        <a href="${repoUrl}" target="_blank" class="repo-link" title="View Source">[REPO]</a>
+                    </div>
+                    <div class="meta-row">
+                        <div class="author">by ${cleanAuthor}</div>
                         <span class="version-badge">v${p.version}</span>
                     </div>
-                    <div class="author">by ${cleanAuthor}</div>
                     <div class="desc">${p.description}</div>
                     <div class="install-overlay">
                         <button class="install-btn" onclick="openModal('${p.name}')">Install</button>
