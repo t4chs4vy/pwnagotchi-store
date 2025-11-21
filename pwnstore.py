@@ -16,8 +16,8 @@ import shutil
 import re
 
 # --- CONFIGURATION ---
-# UPDATE THIS WITH YOUR GITHUB RAW URL
-REGISTRY_URL = "http://gitea.local/wpa2/pwnagotchi-store/raw/branch/main/plugins.json"
+# [IMPORTANT] CHANGE THIS TO YOUR GITHUB RAW URL BEFORE PUSHING
+REGISTRY_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USER/pwnagotchi-store/main/plugins.json"
 
 CUSTOM_PLUGIN_DIR = "/usr/local/share/pwnagotchi/custom-plugins/"
 CONFIG_FILE = "/etc/pwnagotchi/config.toml"
@@ -36,7 +36,7 @@ def banner():
     print(r" | |_) \ \ /\ / / '_ \ (___| |_ ___  _ __ ___  ")
     print(r" |  __/ \ V  V /| | | \___ \ __/ _ \| '__/ _ \ ")
     print(r" | |     \_/\_/ |_| |_|____/ || (_) | | |  __/ ")
-    print(r" |_|   v1.4 (Secure)    \_____/\__\___/|_|  \___| ")
+    print(r" |_|   v1.5 (Auto-Update)\_____/\__\___/|_|  \___| ")
     print(f"{RESET}")
     print(f"  Support the dev: {GREEN}https://buymeacoffee.com/wpa2{RESET}\n")
 
@@ -47,7 +47,6 @@ def check_sudo():
 
 def is_safe_name(name):
     """Security: Prevents Path Traversal (e.g. ../../etc/passwd)"""
-    # Only allow alphanumeric, underscores, and dashes. No dots or slashes.
     return re.match(r'^[a-zA-Z0-9_-]+$', name) is not None
 
 def get_installed_plugins():
@@ -120,6 +119,36 @@ def scan_for_config_params(file_path):
         pass
     return params
 
+def update_self(args):
+    """Downloads the latest pwnstore.py from the repo and overwrites itself."""
+    check_sudo()
+    print(f"[*] Checking for updates...")
+    
+    # Construct the URL for the script (assumes it's in the same folder as plugins.json)
+    script_url = REGISTRY_URL.replace("plugins.json", "pwnstore.py")
+    
+    try:
+        print(f"[*] Downloading latest version from GitHub...")
+        r = requests.get(script_url, timeout=15)
+        if r.status_code != 200:
+            print(f"{RED}[!] Update failed: Server returned {r.status_code}{RESET}")
+            return
+            
+        # Basic sanity check to ensure we downloaded a script
+        if "#!/usr/bin/env python3" not in r.text:
+            print(f"{RED}[!] Security Error: Downloaded file does not look like a valid script.{RESET}")
+            return
+
+        current_file = os.path.realpath(__file__)
+        with open(current_file, 'w') as f:
+            f.write(r.text)
+        
+        os.chmod(current_file, 0o755)
+        print(f"{GREEN}[+] PwnStore updated successfully! Run 'pwnstore list' to see the new version.{RESET}")
+
+    except Exception as e:
+        print(f"{RED}[!] Update failed: {e}{RESET}")
+
 def install_plugin(args):
     check_sudo()
     if not is_safe_name(args.name):
@@ -137,7 +166,6 @@ def install_plugin(args):
 
     print(f"[*] Installing {CYAN}{target_name}{RESET} by {plugin_data['author']}...")
 
-    # Force the destination filename to be safe, ignoring whatever filename the server sends
     final_file_path = os.path.join(CUSTOM_PLUGIN_DIR, f"{target_name}.py")
 
     try:
@@ -147,7 +175,6 @@ def install_plugin(args):
             z = zipfile.ZipFile(io.BytesIO(r.content))
             target_path = plugin_data['path_inside_zip']
             
-            # Security Check: Ensure the zip path doesn't have '..'
             if ".." in target_path or target_path.startswith("/"):
                 print(f"{RED}[!] Security Error: Malicious zip path detected.{RESET}")
                 return
@@ -216,7 +243,6 @@ def update_config(plugin_name, enable=True):
             else:
                 new_lines.append(line)
         
-        # Ensure we are appending to a new line even if the file ends abruptly
         if not found and enable:
             if new_lines and not new_lines[-1].endswith('\n'):
                 new_lines[-1] += '\n'
@@ -250,6 +276,9 @@ def main():
     parser_uninstall = subparsers.add_parser('uninstall', help='Uninstall a plugin')
     parser_uninstall.add_argument('name', type=str, help='Name of the plugin')
     parser_uninstall.set_defaults(func=uninstall_plugin)
+
+    parser_update = subparsers.add_parser('update', help='Update PwnStore to the latest version')
+    parser_update.set_defaults(func=update_self)
 
     args = parser.parse_args()
     if hasattr(args, 'func'):
