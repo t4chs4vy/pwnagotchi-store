@@ -15,6 +15,8 @@
             --text-main: #e0e0e0;
             --text-muted: #888;
             --accent: #4caf50;
+            --danger: #ff5555;
+            --info: #4fc3f7;
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             --font-pixel: 'VT323', monospace;
         }
@@ -100,10 +102,9 @@
         .card h2 { 
             margin: 0; font-size: 1.4rem; color: var(--accent); font-family: var(--font-pixel);
             font-weight: 400; letter-spacing: 1px; white-space: nowrap; overflow: hidden; 
-            text-overflow: ellipsis; padding-right: 50px; /* Space for absolute Repo link */
+            text-overflow: ellipsis; padding-right: 50px; 
         }
         
-        /* Repo Link (Absolute Top Right) */
         .repo-link {
             position: absolute; top: 25px; right: 25px;
             font-family: var(--font-pixel); font-size: 1rem; color: #555; border: 1px solid #333;
@@ -122,10 +123,9 @@
             font-size: 0.9rem; color: #bbb; line-height: 1.5; overflow: hidden; height: 4.5em; 
             display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
         }
-        /* Capitalize first letter of description */
         .desc::first-letter { text-transform: uppercase; }
 
-        /* Install Overlay */
+        /* Hover Button */
         .install-overlay {
             position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px;
             background: linear-gradient(to top, var(--card-bg) 40%, transparent);
@@ -133,6 +133,7 @@
             display: flex; justify-content: center; align-items: flex-end; height: 100px; 
         }
         .card:hover .install-overlay { transform: translateY(0); }
+        
         button.install-btn {
             width: auto; min-width: 120px; padding: 8px 24px; background: var(--accent); color: #000;
             border: none; border-radius: 50px; font-family: var(--font-pixel); font-size: 1.2rem;
@@ -140,7 +141,6 @@
         }
         button.install-btn:hover { background: #fff; }
 
-        /* Mobile */
         @media (hover: none) {
             .install-overlay { transform: translateY(0); background: none; position: relative; padding: 20px 0 0 0; height: auto; }
             .card { height: auto; }
@@ -148,13 +148,33 @@
             button.install-btn { background: #333; color: #fff; box-shadow: none; }
         }
 
-        /* Modal */
+        /* UPDATED MODAL */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
-        .modal { background: #1a1a1a; padding: 35px; border-radius: 20px; width: 90%; max-width: 480px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid #333; }
-        .cmd-box { background: #000; color: var(--accent); font-family: var(--font-mono); padding: 15px; border-radius: 8px; margin: 20px 0; word-break: break-all; border: 1px dashed #333; font-size: 0.9rem; }
-        .modal-actions { display: flex; gap: 10px; }
-        .btn-copy { flex: 2; background: var(--text-main); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-close { flex: 1; background: transparent; color: #666; border: 1px solid #333; padding: 12px; border-radius: 8px; cursor: pointer; }
+        .modal { background: #1a1a1a; padding: 35px; border-radius: 20px; width: 90%; max-width: 550px; text-align: left; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid #333; }
+        
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .modal h3 { margin: 0; color: #fff; font-size: 1.8rem; font-family: 'VT323', monospace; color: var(--accent); }
+        .close-x { background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; }
+        .close-x:hover { color: #fff; }
+
+        /* Command Rows */
+        .cmd-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .cmd-label { width: 80px; font-size: 0.8rem; color: #888; text-transform: uppercase; font-weight: bold; font-family: var(--font-main); }
+        
+        .cmd-box { 
+            flex-grow: 1; background: #000; color: #bbb; font-family: var(--font-mono); 
+            padding: 12px; border-radius: 6px; border: 1px solid #333; font-size: 0.85rem; 
+            cursor: pointer; transition: border-color 0.2s; position: relative;
+        }
+        .cmd-box:hover { border-color: #555; color: #fff; }
+        
+        /* Copy Feedback */
+        .cmd-box::after {
+            content: "CLICK TO COPY";
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 0.7rem; color: #444; font-family: var(--font-main); font-weight: bold;
+        }
+        .cmd-box:hover::after { color: var(--accent); }
 
     </style>
 </head>
@@ -194,13 +214,29 @@
 
     <div class="modal-overlay" id="modal">
         <div class="modal">
-            <h3 id="modal-title" style="margin-top:0; color:#fff; font-size:1.5rem; font-family: 'VT323', monospace;">Install</h3>
-            <p style="color:#888;">Run this command on your Pwnagotchi:</p>
-            <div class="cmd-box" id="modal-cmd">...</div>
-            <div class="modal-actions">
-                <button class="btn-copy" onclick="copyCmd()">Copy Command</button>
-                <button class="btn-close" onclick="closeModal()">Close</button>
+            <div class="modal-header">
+                <h3 id="modal-title">Plugin Name</h3>
+                <button class="close-x" onclick="closeModal()">×</button>
             </div>
+            
+            <div class="cmd-row">
+                <div class="cmd-label" style="color:var(--accent)">INSTALL</div>
+                <div class="cmd-box" onclick="copyText(this)">sudo pwnstore install <span id="p-name"></span></div>
+            </div>
+
+            <div class="cmd-row">
+                <div class="cmd-label" style="color:var(--danger)">UNINSTALL</div>
+                <div class="cmd-box" onclick="copyText(this)">sudo pwnstore uninstall <span id="p-name-un"></span></div>
+            </div>
+
+            <div class="cmd-row">
+                <div class="cmd-label" style="color:var(--info)">INFO</div>
+                <div class="cmd-box" onclick="copyText(this)">pwnstore info <span id="p-name-info"></span></div>
+            </div>
+            
+            <p style="text-align:center; color:#555; font-size:0.8rem; margin-top:20px;">
+                Click any command to copy it to your clipboard.
+            </p>
         </div>
     </div>
 
@@ -214,13 +250,7 @@
             const grid = document.getElementById('plugin-grid');
             grid.innerHTML = "";
             list.forEach(p => {
-                let cleanAuthor = p.author;
-                // Remove email brackets <...>
-                cleanAuthor = cleanAuthor.replace(/<[^>]*>/g, "").trim();
-                // Remove GitHub prefix 1234+
-                cleanAuthor = cleanAuthor.replace(/^[0-9]+\+/, "").trim();
-                // (We do NOT remove @ anymore)
-
+                let cleanAuthor = p.author.replace(/<[^>]*>/g, "").trim().replace(/[\w\.-]+@[\w\.-]+/g, "").trim().replace(/^[0-9]+\+/, "").trim();
                 if(cleanAuthor.length > 20) cleanAuthor = cleanAuthor.substring(0, 18) + "...";
                 if(cleanAuthor.length === 0 || cleanAuthor === "Unknown") cleanAuthor = "Community";
 
@@ -244,7 +274,7 @@
                     </div>
                     <div class="desc">${p.description}</div>
                     <div class="install-overlay">
-                        <button class="install-btn" onclick="openModal('${p.name}')">Install</button>
+                        <button class="install-btn" onclick="openModal('${p.name}')">COMMANDS</button>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -271,30 +301,47 @@
         }
 
         const modal = document.getElementById('modal');
-        const modalCmd = document.getElementById('modal-cmd');
         function openModal(name) {
             document.getElementById('modal-title').innerText = name;
-            modalCmd.innerText = `sudo pwnstore install ${name}`;
+            
+            // Update all 3 command boxes
+            document.querySelectorAll('.cmd-box').forEach(box => {
+                // Get the base command (install/uninstall/info)
+                let base = box.innerText.split(' ')[0] + ' ' + box.innerText.split(' ')[1];
+                if(box.innerText.startsWith('sudo')) base += ' ' + box.innerText.split(' ')[2];
+                
+                box.innerText = base + ' ' + name;
+            });
+
             modal.style.display = 'flex';
         }
         function closeModal() { modal.style.display = 'none'; }
         
-        function copyCmd() {
-            const text = modalCmd.innerText;
+        function copyText(element) {
+            const text = element.innerText;
+            
+            // Visual Feedback
+            const originalColor = element.style.borderColor;
+            element.style.borderColor = "var(--accent)";
+            element.style.color = "#fff";
+            
+            // Robust Copy Logic
             if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(onCopy);
+                navigator.clipboard.writeText(text);
             } else {
                 const ta = document.createElement("textarea");
                 ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
                 document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                document.body.removeChild(ta); onCopy();
+                document.body.removeChild(ta);
             }
+
+            // Reset style after 200ms to show a "flash" effect
+            setTimeout(() => {
+                element.style.borderColor = "#333";
+                element.style.color = "#bbb";
+            }, 200);
         }
-        function onCopy() {
-            const btn = document.querySelector('.btn-copy');
-            btn.innerText = "Copied!";
-            setTimeout(() => btn.innerText = "Copy Command", 2000);
-        }
+
         window.onclick = e => { if(e.target == modal) closeModal(); }
     </script>
 </body>
