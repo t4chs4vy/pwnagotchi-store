@@ -148,27 +148,23 @@
             button.install-btn { background: #333; color: #fff; box-shadow: none; }
         }
 
-        /* --- POLISHED MODAL CSS --- */
+        /* MODAL */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; justify-content: center; align-items: center; }
         .modal { background: #1a1a1a; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px; text-align: left; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid #333; }
         
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         
-        /* Bigger Pixel Title */
         .modal h3 { margin: 0; color: #fff; font-size: 2rem; font-family: 'VT323', monospace; color: var(--accent); letter-spacing: 1px; }
         
-        /* Better Close Button */
         .close-x { 
             background: none; border: none; color: #666; font-size: 2rem; line-height: 1;
-            cursor: pointer; transition: color 0.2s; font-family: var(--font-main);
-            padding: 0 10px;
+            cursor: pointer; transition: color 0.2s; font-family: var(--font-main); padding: 0 10px;
         }
         .close-x:hover { color: var(--danger); }
 
         /* Command Rows */
         .cmd-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         
-        /* Fixed width labels for perfect alignment */
         .cmd-label { 
             width: 85px; font-size: 0.85rem; font-weight: 800; font-family: var(--font-main); 
             text-align: right; letter-spacing: 0.5px;
@@ -185,7 +181,6 @@
         .cmd-box:hover { border-color: #666; color: #fff; background: #0a0a0a; }
         .cmd-box:active { transform: scale(0.98); }
         
-        /* Hover "COPY" Tip */
         .cmd-box:hover::after {
             content: "COPY";
             position: absolute; right: 0; top: 0; bottom: 0;
@@ -208,10 +203,11 @@
         </div>
         
         <nav class="social-nav">
-            <a href="https://discord.gg/pwnagotchi" target="_blank" class="social-link">[DISCORD]</a>
-            <a href="https://github.com/" target="_blank" class="social-link">[GITHUB]</a>
+            <a href="https://discord.gg/PgaU3Vp" target="_blank" class="social-link">[DISCORD]</a>
+            <a href="https://github.com/jayofelony/pwnagotchi/wiki" target="_blank" class="social-link">[GITHUB/WIKI]</a>
             <a href="https://reddit.com/r/pwnagotchi" target="_blank" class="social-link">[REDDIT]</a>
             <a href="https://pwnagotchi.org" target="_blank" class="social-link">[PWNAGOTCHI.ORG]</a>
+            <a href="https://opwngrid.xyz/search/a1dcea78603b44e3fc3de09f0b9a0a5e28ffbd2e69429494e0d77bb34a2623ea" target="_blank" class="social-link">[CONTACT]</a>
         </nav>
     </header>
 
@@ -323,20 +319,16 @@
         function openModal(name) {
             document.getElementById('modal-title').innerText = name;
             
-            // Update all 3 command boxes text content
             document.querySelectorAll('.cmd-box').forEach(box => {
-                // Reset colors
                 box.style.borderColor = "#333";
                 box.style.color = "#ccc";
                 
-                // Get the base command from the first text node only (ignore the span)
-                let fullText = box.innerText; // e.g., "sudo pwnstore install "
-                // Split by spaces and reconstruct base: "sudo pwnstore install"
+                let fullText = box.innerText;
                 let parts = fullText.trim().split(' ');
                 let base = "";
                 
-                if(parts[0] === 'sudo') base = parts[0] + " " + parts[1] + " " + parts[2]; // sudo pwnstore install
-                else base = parts[0] + " " + parts[1]; // pwnstore info
+                if(parts[0] === 'sudo') base = parts[0] + " " + parts[1] + " " + parts[2];
+                else base = parts[0] + " " + parts[1];
                 
                 box.innerText = base + " " + name;
             });
@@ -347,13 +339,10 @@
         
         function copyText(element) {
             const text = element.innerText;
-            
-            // Visual Feedback
             const originalColor = element.style.borderColor;
             element.style.borderColor = "var(--accent)";
             element.style.color = "#fff";
             
-            // Robust Copy Logic
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text);
             } else {
@@ -363,7 +352,6 @@
                 document.body.removeChild(ta);
             }
 
-            // Reset style after 200ms to show a "flash" effect
             setTimeout(() => {
                 element.style.borderColor = "#333";
                 element.style.color = "#ccc";
