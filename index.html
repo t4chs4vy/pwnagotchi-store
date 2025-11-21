@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PwnStore</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --bg-color: #121212;
@@ -12,7 +16,7 @@
             --text-muted: #888;
             --accent: #4caf50;
             --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            --font-mono: 'Courier New', Courier, monospace;
+            --font-pixel: 'VT323', monospace; /* The Pwnagotchi Font */
         }
 
         * { box-sizing: border-box; }
@@ -27,30 +31,40 @@
 
         /* Header */
         header { text-align: center; margin-bottom: 50px; }
-        
+
+        /* The Face Style */
+        .pwn-face {
+            font-family: 'Arial', sans-serif; /* Standard font renders the circles better */
+            font-size: 3.5rem;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(76, 175, 80, 0.3);
+        }
+
         h1 { 
-            font-weight: 800; margin: 0; letter-spacing: -1px; font-size: 2.5rem; color: #fff; 
+            font-family: var(--font-pixel);
+            font-weight: 400; 
+            margin: 0; 
+            font-size: 4rem; /* Big Pixel Text */
+            color: #fff; 
+            line-height: 0.8;
             text-transform: uppercase;
+            letter-spacing: 2px;
         }
         
         .subtitle { 
-            color: var(--text-muted); font-size: 0.9rem; margin-top: 8px; font-weight: 500; 
+            color: var(--text-muted); font-size: 1rem; margin-top: 10px; font-weight: 500; 
             letter-spacing: 1px; text-transform: uppercase;
         }
 
-        /* Unified Credits Styling */
         .credits {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 0.85rem;
             color: #666; 
             font-family: var(--font-main);
             font-weight: 500;
         }
-        .credits a { 
-            color: #666; /* Same color as text */
-            text-decoration: none; 
-            transition: color 0.2s;
-        }
+        .credits a { color: #666; text-decoration: none; transition: color 0.2s; }
         .credits a:hover { color: var(--accent); }
 
         /* Search */
@@ -62,11 +76,13 @@
             border: 1px solid #333;
             border-radius: 50px;
             color: #fff;
-            font-size: 1rem;
+            font-size: 1.2rem; /* Larger font for input */
+            font-family: var(--font-pixel); /* Pixel font input */
             outline: none;
             transition: all 0.3s ease;
         }
         input#search:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(76, 175, 80, 0.1); }
+        input#search::placeholder { color: #555; }
 
         /* Grid */
         .grid {
@@ -87,7 +103,7 @@
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            height: 220px; /* STRICT FIXED HEIGHT */
+            height: 220px; 
             overflow: hidden;
         }
 
@@ -105,15 +121,17 @@
         }
 
         .card h2 { 
-            margin: 0; font-size: 1.1rem; color: var(--accent); 
-            font-family: var(--font-mono); font-weight: 600;
+            margin: 0; font-size: 1.4rem; color: var(--accent); 
+            font-family: var(--font-pixel); /* Pixel font headers */
+            font-weight: 400;
+            letter-spacing: 1px;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             max-width: 75%;
         }
 
         .version-badge {
-            background: #2a2a2a; font-size: 0.7rem; padding: 2px 8px; 
-            border-radius: 10px; color: #777; font-family: var(--font-mono);
+            background: #2a2a2a; font-size: 0.8rem; padding: 2px 8px; 
+            border-radius: 4px; color: #777; font-family: var(--font-pixel);
         }
 
         .author { 
@@ -121,52 +139,44 @@
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
-        /* TIDY DESCRIPTION */
         .desc { 
             font-size: 0.9rem; color: #bbb; line-height: 1.5; 
             overflow: hidden;
-            height: 4.5em; /* Shows exactly 3 lines */
+            height: 4.5em; 
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
         }
 
-        /* Hover Button Magic */
+        /* Hover Button */
         .install-overlay {
             position: absolute;
             bottom: 0; left: 0; width: 100%;
             padding: 20px;
-            /* Strong gradient to cover text behind button */
             background: linear-gradient(to top, var(--card-bg) 40%, transparent);
             transform: translateY(100%);
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            height: 100px; /* Height of the fade area */
+            height: 100px; 
         }
 
         .card:hover .install-overlay { transform: translateY(0); }
 
         button.install-btn {
-            width: auto; /* Auto width, not full width */
-            min-width: 120px;
-            padding: 10px 24px;
-            background: var(--accent);
-            color: #000;
-            border: none;
-            border-radius: 50px; /* Pill Shape */
-            font-weight: 700;
-            font-size: 0.9rem;
+            width: auto; min-width: 120px; padding: 8px 24px;
+            background: var(--accent); color: #000; border: none;
+            border-radius: 50px; 
+            font-family: var(--font-pixel); /* Pixel font button */
+            font-size: 1.2rem;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
         
         button.install-btn:hover { background: #fff; }
 
-        /* Mobile Tweaks */
         @media (hover: none) {
             .install-overlay { transform: translateY(0); background: none; position: relative; padding: 20px 0 0 0; height: auto; }
             .card { height: auto; }
@@ -199,6 +209,7 @@
 <body>
 
     <header>
+        <div class="pwn-face">(◕‿‿◕)</div>
         <h1>PwnStore</h1>
         <div class="subtitle">Unofficial Plugin Registry</div>
         <div class="credits">
@@ -207,7 +218,7 @@
     </header>
 
     <div class="search-container">
-        <input type="text" id="search" placeholder="Search plugins..." onkeyup="filterPlugins()">
+        <input type="text" id="search" placeholder="> Search plugins..." onkeyup="filterPlugins()">
     </div>
 
     <div class="grid" id="plugin-grid">
@@ -215,7 +226,7 @@
 
     <div class="modal-overlay" id="modal">
         <div class="modal">
-            <h3 id="modal-title" style="margin-top:0; color:#fff; font-size:1.5rem;">Install</h3>
+            <h3 id="modal-title" style="margin-top:0; color:#fff; font-size:1.5rem; font-family: 'VT323', monospace;">Install</h3>
             <p style="color:#888;">Run this command on your Pwnagotchi:</p>
             <div class="cmd-box" id="modal-cmd">...</div>
             <div class="modal-actions">
@@ -233,15 +244,7 @@
             const grid = document.getElementById('plugin-grid');
             grid.innerHTML = "";
             list.forEach(p => {
-                // Aggressive Author Cleanup
-                let cleanAuthor = p.author;
-                // Remove email addresses inside <>
-                cleanAuthor = cleanAuthor.replace(/<[^>]*>/g, "").trim();
-                // Remove email addresses that are just text
-                cleanAuthor = cleanAuthor.replace(/[\w\.-]+@[\w\.-]+/g, "").trim();
-                // Remove leading numbers/symbols (common in github users)
-                cleanAuthor = cleanAuthor.replace(/^[0-9]+\+/, "").trim();
-                
+                let cleanAuthor = p.author.replace(/<[^>]*>/g, "").trim().replace(/[\w\.-]+@[\w\.-]+/g, "").trim().replace(/^[0-9]+\+/, "").trim();
                 if(cleanAuthor.length > 20) cleanAuthor = cleanAuthor.substring(0, 18) + "...";
                 if(cleanAuthor.length === 0) cleanAuthor = "Unknown";
 
@@ -250,7 +253,7 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <h2>${p.name}</h2>
-                        <span class="version-badge">${p.version}</span>
+                        <span class="version-badge">v${p.version}</span>
                     </div>
                     <div class="author">by ${cleanAuthor}</div>
                     <div class="desc">${p.description}</div>
