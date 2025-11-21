@@ -10,21 +10,32 @@ INPUT_FILE = "repos.txt"
 OUTPUT_FILE = "plugins.json"
 
 # --- CATEGORY LOGIC ---
-def detect_category(code):
-    """Scans code for keywords to guess the category."""
-    code_lower = code.lower()
+def detect_category(code, name):
+    """Scans code AND filename for keywords to guess the category."""
+    text = (code + " " + name).lower()
     
-    if any(x in code_lower for x in ['ui.set', 'display', 'font', 'screen', 'canvas', 'faces']):
-        return "Display"
-    if any(x in code_lower for x in ['gps', 'location', 'coordinates', 'fix', 'lat', 'lon']):
+    # 1. CHECK GPS (High Priority)
+    if any(x in text for x in ['gps', 'location', 'coordinates', 'fix', 'lat', 'lon', 'nmea', 'geo']):
         return "GPS"
-    if any(x in code_lower for x in ['discord', 'telegram', 'twitter', 'social', 'webhook', 'slack']):
-        return "Social"
-    if any(x in code_lower for x in ['led', 'gpio', 'light', 'button', 'ups', 'battery']):
-        return "Hardware"
-    if any(x in code_lower for x in ['handshake', 'deauth', 'assoc', 'crack', 'pwn', 'attack']):
+    
+    # 2. CHECK ATTACK / WIFI
+    if any(x in text for x in ['handshake', 'deauth', 'assoc', 'crack', 'pwn', 'attack', 'sniffer', 'wpa', 'pmkid', 'pcap', 'wardriving']):
         return "Attack"
-    if any(x in code_lower for x in ['log', 'backup', 'ssh', 'ftp', 'system', 'update']):
+
+    # 3. CHECK HARDWARE / BLUETOOTH
+    if any(x in text for x in ['led', 'gpio', 'light', 'button', 'ups', 'battery', 'i2c', 'spi', 'bluetooth', 'bt-', 'ble']):
+        return "Hardware"
+
+    # 4. CHECK SOCIAL / NOTIFICATIONS
+    if any(x in text for x in ['discord', 'telegram', 'twitter', 'social', 'webhook', 'slack', 'ntfy', 'push', 'message']):
+        return "Social"
+
+    # 5. CHECK DISPLAY / UI
+    if any(x in text for x in ['ui.set', 'display', 'font', 'screen', 'canvas', 'faces', 'render', 'draw', 'view', 'image', 'text']):
+        return "Display"
+        
+    # 6. CHECK SYSTEM / UTILS
+    if any(x in text for x in ['log', 'backup', 'ssh', 'ftp', 'system', 'update', 'cpu', 'mem', 'temp', 'disk', 'reboot', 'shutdown', 'internet', 'connection']):
         return "System"
     
     return "General"
@@ -47,8 +58,8 @@ def parse_python_content(code, filename, origin_url, internal_path=None):
                 description = re.sub(r"['\"\n\r]", "", raw_desc)
                 description = re.sub(r"\s+", " ", description).strip()
 
-        # 3. Detect Category
-        category = detect_category(code)
+        # 3. Detect Category (Pass Name AND Code now)
+        category = detect_category(code, filename)
 
         if description != "No description provided." or version:
             return {
@@ -83,7 +94,7 @@ def process_zip_url(url):
                 
                 plugin = parse_python_content(code, filename.split("/")[-1], url, filename)
                 if plugin:
-                    print(f"   [+] Found: {plugin['name']} ({plugin['category']})")
+                    print(f"   [+] Found: {plugin['name']} [{plugin['category']}]")
                     found.append(plugin)
     except Exception as e:
         print(f"   [!] ZIP Error: {e}")
