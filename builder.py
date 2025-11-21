@@ -11,19 +11,34 @@ OUTPUT_FILE = "plugins.json"
 
 # --- METADATA EXTRACTION ---
 def parse_python_content(code, filename, origin_url, internal_path=None):
-    """Scrapes the __version__, __author__, etc. from the text content of a plugin."""
+    """Scrapes metadata, handling multi-line descriptions and various quote types."""
     try:
-        # Regex to find metadata
+        # 1. Find Version and Author (Standard single line)
         version = re.search(r"__version__\s*=\s*['\"]([^'\"]+)['\"]", code)
-        description = re.search(r"__description__\s*=\s*['\"]([^'\"]+)['\"]", code)
         author = re.search(r"__author__\s*=\s*['\"]([^'\"]+)['\"]", code)
         
-        # Only accept if it looks like a valid Pwnagotchi plugin
-        if description or version:
+        # 2. Find Description (Handles Single line AND Multi-line with parentheses)
+        # Look for: __description__ = "..."  OR  __description__ = ( ... )
+        desc_match = re.search(r"__description__\s*=\s*(?:['\"]([^'\"]+)['\"]|\(([^)]+)\))", code, re.DOTALL)
+        
+        description = "No description provided."
+        if desc_match:
+            if desc_match.group(1):
+                # Case A: Simple single line
+                description = desc_match.group(1)
+            elif desc_match.group(2):
+                # Case B: Multi-line inside ( ... )
+                raw_desc = desc_match.group(2)
+                # Clean up: Remove quotes, newlines, and extra spaces to make it one nice line
+                description = re.sub(r"['\"\n\r]", "", raw_desc)
+                description = re.sub(r"\s+", " ", description).strip()
+
+        # Only accept if it looks like a valid plugin (has at least version or description)
+        if description != "No description provided." or version:
             return {
                 "name": filename.replace(".py", ""),
                 "version": version.group(1) if version else "0.0.1",
-                "description": description.group(1) if description else "No description provided.",
+                "description": description,
                 "author": author.group(1) if author else "Unknown",
                 "origin_type": "zip" if internal_path else "single",
                 "download_url": origin_url,  # The URL of the ZIP or the Raw file
@@ -75,7 +90,7 @@ def main():
             plugins = process_zip_url(url)
             master_list.extend(plugins)
         else:
-            # Logic for single raw files (if you ever add them)
+            # Logic for single raw files
             try:
                 print(f"[*] Scanning file: {url}")
                 code = requests.get(url).text
