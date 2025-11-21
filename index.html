@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PwnStore Registry</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #33ff00;
+            --card-bg: #0a0a0a;
+            --border-color: #33ff00;
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header & ASCII Art */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            white-space: pre;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+
+        h1 { margin: 10px 0; text-transform: uppercase; letter-spacing: 2px; }
+        
+        /* Search Bar */
+        .search-container {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+
+        input#search {
+            width: 100%;
+            padding: 15px;
+            background: #000;
+            border: 2px solid var(--border-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            font-size: 1.2rem;
+            outline: none;
+        }
+        input#search::placeholder { color: #005500; }
+        input#search:focus { box-shadow: 0 0 10px var(--text-color); }
+
+        /* Plugin Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 4px 4px 0px var(--text-color);
+        }
+
+        .card h2 { margin-top: 0; font-size: 1.4rem; border-bottom: 1px dashed #005500; padding-bottom: 10px; }
+        .meta { font-size: 0.8rem; color: #88cc88; margin-bottom: 15px; }
+        .desc { font-size: 0.9rem; line-height: 1.4; height: 60px; overflow: hidden; margin-bottom: 20px; }
+
+        button.install-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--text-color);
+            color: #000;
+            border: none;
+            font-family: var(--font-main);
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        button.install-btn:hover { background: #fff; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: #000;
+            border: 2px solid var(--text-color);
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 20px var(--text-color);
+        }
+        .cmd-box {
+            background: #111;
+            border: 1px dashed var(--text-color);
+            padding: 15px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+        .close-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--text-color);
+            padding: 5px 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #444;
+        }
+        footer a { color: #666; text-decoration: none; }
+        footer a:hover { color: var(--text-color); }
+
+    </style>
+</head>
+<body>
+
+    <header>
+<pre>
+  ____                _____ _                  
+ |  _ \ _      ___ __/ ____| |                 
+ | |_) \ \ /\ / / '_ \ (___| |_ ___  _ __ ___  
+ |  __/ \ V  V /| | | \___ \ __/ _ \| '__/ _ \ 
+ | |     \_/\_/ |_| |_|____/ || (_) | | |  __/ 
+ |_|   v1.0             \_____/\__\___/|_|  \___| 
+</pre>
+        <h1>Unofficial App Store</h1>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="search" placeholder="> Search plugins..." onkeyup="filterPlugins()">
+    </div>
+
+    <div class="grid" id="plugin-grid">
+        <div style="text-align:center; width:100%;">Loading registry...</div>
+    </div>
+
+    <footer>
+        <p>Built by WPA2</p>
+        <a href="https://buymeacoffee.com/wpa2" target="_blank">☕ Buy me a coffee</a>
+    </footer>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2 id="modal-title">Install Plugin</h2>
+            <p>Run this command on your Pwnagotchi:</p>
+            <div class="cmd-box" id="modal-cmd">sudo pwnstore install ...</div>
+            <button class="install-btn" onclick="copyCmd()">Copy Command</button>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let plugins = [];
+
+        // 1. Fetch the JSON data
+        fetch('plugins.json')
+            .then(response => response.json())
+            .then(data => {
+                plugins = data;
+                renderPlugins(plugins);
+            })
+            .catch(err => {
+                document.getElementById('plugin-grid').innerHTML = "Error loading plugins.json. Is the file generated?";
+                console.error(err);
+            });
+
+        // 2. Render the grid
+        function renderPlugins(list) {
+            const grid = document.getElementById('plugin-grid');
+            grid.innerHTML = "";
+
+            if(list.length === 0) {
+                grid.innerHTML = "<p>No plugins found.</p>";
+                return;
+            }
+
+            list.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h2>${p.name}</h2>
+                    <div class="meta">v${p.version} • by ${p.author}</div>
+                    <div class="desc">${p.description}</div>
+                    <button class="install-btn" onclick="openModal('${p.name}')">INSTALL</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 3. Filter Logic
+        function filterPlugins() {
+            const term = document.getElementById('search').value.toLowerCase();
+            const filtered = plugins.filter(p => 
+                p.name.toLowerCase().includes(term) || 
+                p.description.toLowerCase().includes(term)
+            );
+            renderPlugins(filtered);
+        }
+
+        // 4. Modal Logic
+        const modal = document.getElementById('modal');
+        const modalCmd = document.getElementById('modal-cmd');
+
+        function openModal(name) {
+            document.getElementById('modal-title').innerText = "Install " + name;
+            modalCmd.innerText = `sudo pwnstore install ${name}`;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        function copyCmd() {
+            navigator.clipboard.writeText(modalCmd.innerText);
+            const btn = document.querySelector('.modal .install-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+        }
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
