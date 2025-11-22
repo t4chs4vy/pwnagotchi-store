@@ -16,7 +16,7 @@ import shutil
 import re
 
 # --- CONFIGURATION ---
-REGISTRY_URL = "http://192.168.1.4:3001/wpa2/pwnagotchi-store/raw/branch/main/plugins.json"
+REGISTRY_URL = "https://raw.githubusercontent.com/wpa-2/pwnagotchi-store/main/plugins.json"
 
 CUSTOM_PLUGIN_DIR = "/usr/local/share/pwnagotchi/custom-plugins/"
 CONFIG_FILE = "/etc/pwnagotchi/config.toml"
