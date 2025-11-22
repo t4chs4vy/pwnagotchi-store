@@ -69,23 +69,44 @@
         }
         .social-link:hover { color: #000; background: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
 
-        /* --- INSTALL BANNER (NEW) --- */
+        /* --- UPGRADED INSTALL BANNER --- */
         .install-banner {
-            max-width: 800px; margin: 40px auto 60px auto; background: #0a0a0a;
-            border: 1px dashed var(--accent); border-radius: 12px; padding: 20px;
-            text-align: center; position: relative;
+            max-width: 850px; margin: 40px auto 60px auto; 
+            display: flex; flex-direction: column; align-items: center;
         }
-        .install-title { font-family: var(--font-pixel); font-size: 1.4rem; color: var(--accent); margin-bottom: 10px; }
-        .install-cmd {
-            background: #000; color: #ccc; font-family: var(--font-mono); padding: 15px;
-            border-radius: 6px; border: 1px solid #333; font-size: 0.9rem; word-break: break-all;
-            cursor: pointer; transition: all 0.2s; position: relative;
+        .install-title { 
+            font-family: var(--font-pixel); font-size: 1.5rem; color: var(--accent); 
+            margin-bottom: 10px; letter-spacing: 1px;
         }
-        .install-cmd:hover { border-color: var(--accent); color: #fff; }
-        .install-cmd:hover::after {
-            content: "CLICK TO COPY"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-            color: var(--accent); font-family: var(--font-pixel); font-size: 1rem; background: #000; padding-left: 10px;
+        
+        /* The Container */
+        .install-box {
+            display: flex; width: 100%; background: #000;
+            border: 1px solid var(--accent); border-radius: 8px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.15);
+            overflow: hidden; transition: box-shadow 0.2s;
+            cursor: pointer;
         }
+        .install-box:hover { box-shadow: 0 0 25px rgba(76, 175, 80, 0.3); }
+
+        /* The Command Text (Scrollable) */
+        .install-text {
+            flex-grow: 1; padding: 15px 20px;
+            color: #ccc; font-family: var(--font-mono); font-size: 0.9rem;
+            white-space: nowrap; overflow-x: auto; /* Horizontal scroll */
+            scrollbar-width: none; /* Firefox hide scrollbar */
+            display: flex; align-items: center;
+        }
+        .install-text::-webkit-scrollbar { display: none; } /* Chrome hide scrollbar */
+
+        /* The Copy Button (Right Side) */
+        .install-action {
+            background: var(--card-bg); border-left: 1px solid #333;
+            padding: 0 25px; display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-family: var(--font-pixel); font-size: 1.2rem;
+            transition: all 0.2s;
+        }
+        .install-box:hover .install-action { background: var(--accent); color: #000; }
 
         /* Filters */
         .filters { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
@@ -171,6 +192,7 @@
         .modal { background: #1a1a1a; padding: 30px; border-radius: 16px; width: 90%; max-width: 600px; text-align: left; box-shadow: 0 20px 60px rgba(0,0,0,0.8); border: 1px solid #333; }
         
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        
         .modal h3 { margin: 0; color: #fff; font-size: 2rem; font-family: 'VT323', monospace; color: var(--accent); letter-spacing: 1px; }
         
         .close-x { 
@@ -181,7 +203,11 @@
 
         /* Command Rows */
         .cmd-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .cmd-label { width: 85px; font-size: 0.85rem; font-weight: 800; font-family: var(--font-main); text-align: right; letter-spacing: 0.5px; }
+        
+        .cmd-label { 
+            width: 85px; font-size: 0.85rem; font-weight: 800; font-family: var(--font-main); 
+            text-align: right; letter-spacing: 0.5px;
+        }
         
         .cmd-box { 
             flex-grow: 1; background: #000; color: #ccc; font-family: 'VT323', monospace; font-size: 1.2rem;
@@ -190,6 +216,7 @@
             white-space: nowrap; overflow-x: auto; scrollbar-width: none;
         }
         .cmd-box::-webkit-scrollbar { display: none; }
+        
         .cmd-box:hover { border-color: #666; color: #fff; background: #0a0a0a; }
         .cmd-box:active { transform: scale(0.98); }
         
@@ -224,8 +251,9 @@
 
     <div class="install-banner">
         <div class="install-title">INSTALL PWNSTORE</div>
-        <div class="install-cmd" onclick="copyText(this)">
-            sudo wget -O /usr/local/bin/pwnstore https://raw.githubusercontent.com/wpa-2/pwnagotchi-store/main/pwnstore.py && sudo chmod +x /usr/local/bin/pwnstore
+        <div class="install-box" onclick="copyInstallCmd()">
+            <div class="install-text" id="install-cmd-text">sudo wget -O /usr/local/bin/pwnstore https://raw.githubusercontent.com/wpa-2/pwnagotchi-store/main/pwnstore.py && sudo chmod +x /usr/local/bin/pwnstore</div>
+            <div class="install-action" id="install-btn-text">COPY</div>
         </div>
     </div>
 
@@ -355,9 +383,28 @@
         }
         function closeModal() { modal.style.display = 'none'; }
         
+        // HEADER INSTALL COPY
+        function copyInstallCmd() {
+            const text = document.getElementById('install-cmd-text').innerText;
+            const btn = document.getElementById('install-btn-text');
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text);
+            } else {
+                const ta = document.createElement("textarea");
+                ta.value = text; ta.style.position="fixed"; ta.style.left="-9999px";
+                document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+        }
+
+        // MODAL COPY
         function copyText(element) {
             const text = element.innerText;
-            const originalColor = element.style.borderColor;
             element.style.borderColor = "var(--accent)";
             element.style.color = "#fff";
             
