@@ -16,8 +16,7 @@ import shutil
 import re
 
 # --- CONFIGURATION ---
-# [IMPORTANT] ALWAYS KEEP THIS SET TO THE PUBLIC GITHUB URL
-DEFAULT_REGISTRY = "https://raw.githubusercontent.com/wpa-2/pwnagotchi-store/main/plugins.json"
+DEFAULT_REGISTRY = "http://192.168.1.4:3001/wpa2/pwnagotchi-store/raw/branch/main/plugins.json"
 
 CUSTOM_PLUGIN_DIR = "/usr/local/share/pwnagotchi/custom-plugins/"
 CONFIG_FILE = "/etc/pwnagotchi/config.toml"
@@ -36,7 +35,7 @@ def banner():
     print(r" | |_) \ \ /\ / / '_ \ (___| |_ ___  _ __ ___  ")
     print(r" |  __/ \ V  V /| | | \___ \ __/ _ \| '__/ _ \ ")
     print(r" | |     \_/\_/ |_| |_|____/ || (_) | | |  __/ ")
-    print(r" |_|   v1.9 (Sources)   \_____/\__\___/|_|  \___| ")
+    print(r" |_|   v2.0 (Polished)  \_____/\__\___/|_|  \___| ")
     print(f"{RESET}")
     print(f"  Support the dev: {GREEN}https://buymeacoffee.com/wpa2{RESET}\n")
 
@@ -102,36 +101,34 @@ def list_plugins(args):
     registry = fetch_registry()
     installed = get_installed_plugins()
     
-    print(f"{'NAME':<20} | {'VERSION':<8} | {'STATUS':<10} | {'DESCRIPTION'}")
-    print("-" * 85)
+    # Clean Table Headers
+    print(f"{'NAME':<24} | {'VERSION':<10} | {'TYPE':<12} | {'STATUS'}")
+    print("-" * 75)
     
     for p in registry:
         name = p['name']
+        # Truncate long names to keep table clean
+        if len(name) > 23: name = name[:20] + "..."
+            
         status = f"{GREEN}INSTALLED{RESET}" if name in installed else "Available"
-        desc = p['description'][:40] + "..." if len(p['description']) > 40 else p['description']
-        print(f"{name:<20} | {p['version']:<8} | {status:<19} | {desc}")
-    print("-" * 85)
+        category = p.get('category', 'General')
+        
+        print(f"{name:<24} | {p['version']:<10} | {category:<12} | {status}")
+    print("-" * 75)
 
 def list_sources(args):
     """Reverse engineers the list of repos from the plugin URLs."""
     print(f"[*] Analyzing repository sources...")
     registry = fetch_registry()
-    
-    sources = {} # Dictionary to store RepoName -> PluginCount
+    sources = {} 
 
     for p in registry:
         url = p.get('download_url', '')
-        # Extract User/Repo from GitHub URLs
-        # Format: https://github.com/USER/REPO/...
-        # Or raw: https://raw.githubusercontent.com/USER/REPO/...
         repo_name = "Unknown Source"
         
         if 'github.com' in url or 'githubusercontent.com' in url:
             parts = url.split('/')
-            # Find the part after the domain
             try:
-                # Skip https: , empty, domain. The next two are user/repo
-                # This logic works for both github.com and raw.githubusercontent.com
                 start_idx = 3 
                 user = parts[start_idx]
                 repo = parts[start_idx+1]
@@ -141,10 +138,7 @@ def list_sources(args):
         else:
             repo_name = "Other/Local"
 
-        if repo_name in sources:
-            sources[repo_name] += 1
-        else:
-            sources[repo_name] = 1
+        sources[repo_name] = sources.get(repo_name, 0) + 1
 
     print(f"\n{'REPOSITORY / SOURCE':<50} | {'PLUGINS'}")
     print("-" * 65)
@@ -165,15 +159,18 @@ def search_plugins(args):
         print(f"{YELLOW}[!] No plugins found matching '{args.query}'{RESET}")
         return
 
-    print(f"{'NAME':<20} | {'VERSION':<8} | {'STATUS':<10} | {'DESCRIPTION'}")
-    print("-" * 85)
+    print(f"{'NAME':<24} | {'VERSION':<10} | {'TYPE':<12} | {'STATUS'}")
+    print("-" * 75)
     
     for p in results:
         name = p['name']
+        if len(name) > 23: name = name[:20] + "..."
+        
         status = f"{GREEN}INSTALLED{RESET}" if name in installed else "Available"
-        desc = p['description'][:40] + "..." if len(p['description']) > 40 else p['description']
-        print(f"{name:<20} | {p['version']:<8} | {status:<19} | {desc}")
-    print("-" * 85)
+        category = p.get('category', 'General')
+        
+        print(f"{name:<24} | {p['version']:<10} | {category:<12} | {status}")
+    print("-" * 75)
 
 def show_info(args):
     if not is_safe_name(args.name):
@@ -210,11 +207,10 @@ def scan_for_config_params(file_path):
     return params
 
 def update_self(args):
-    """Downloads the latest pwnstore.py from the repo and overwrites itself."""
     check_sudo()
     print(f"[*] Checking for tool updates...")
     
-    # Always try to update from the URL we are currently using
+    # Always try to update from the URL we are currently using (Local or Public)
     current_registry = get_registry_url()
     script_url = current_registry.replace("plugins.json", "pwnstore.py")
     
@@ -240,7 +236,6 @@ def update_self(args):
         print(f"{RED}[!] Update failed: {e}{RESET}")
 
 def upgrade_plugins(args):
-    """Checks installed plugins against registry and updates them."""
     check_sudo()
     print(f"[*] Checking for plugin updates...")
     
@@ -251,8 +246,6 @@ def upgrade_plugins(args):
 
     for filename in installed_files:
         plugin_name = filename.replace(".py", "")
-        
-        # Find this plugin in the registry
         remote_data = next((p for p in registry if p['name'] == plugin_name), None)
         
         if remote_data:
@@ -284,10 +277,8 @@ def upgrade_plugins(args):
     
     if choice == 'y' or choice == '':
         for u in updates_found:
-            # Reuse install logic
             class MockArgs:
                 name = u['name']
-            
             print(f"\n[*] Upgrading {u['name']}...")
             install_plugin(MockArgs())
         
@@ -412,7 +403,7 @@ def main():
     parser_list = subparsers.add_parser('list', help='List all available plugins')
     parser_list.set_defaults(func=list_plugins)
 
-    # Sources (NEW)
+    # Sources
     parser_sources = subparsers.add_parser('sources', help='List repository sources')
     parser_sources.set_defaults(func=list_sources)
 
