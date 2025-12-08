@@ -4,20 +4,24 @@ import re
 import io
 import zipfile
 import os
+import logging
 from collections import defaultdict
 
 # --- CONFIGURATION ---
 INPUT_FILE = "repos.txt"
 OUTPUT_FILE = "plugins.json"
 
+# Logging setup
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
 # --- SMART CATEGORY DICTIONARY ---
 KEYWORDS = {
-    "GPS": ["gps", "geo", "lat", "lon", "location", "map", "coordinates", "nmea", "track"],
-    "Social": ["discord", "telegram", "twitter", "social", "chat", "bot", "webhook", "slack", "message", "notify"],
-    "Display": ["screen", "display", "ui", "theme", "face", "font", "oled", "ink", "led", "view", "clock", "weather", "status", "mem", "cpu", "info"],
-    "Attack": ["pwn", "crack", "handshake", "deauth", "assoc", "brute", "attack", "wardriving", "pmkid", "wpa", "eapol", "sniff"],
-    "Hardware": ["ups", "battery", "power", "shutdown", "reboot", "button", "switch", "gpio", "i2c", "spi", "bluetooth", "ble", "hw"],
-    "System": ["backup", "ssh", "log", "update", "fix", "clean", "config", "manage", "util", "internet", "wifi", "connection"]
+    'GPS': ['gps', 'geo', 'lat', 'lon', 'location', 'map', 'coordinates', 'nmea', 'track', 'wigle', 'wardrive'],
+    'Social': ['discord', 'telegram', 'twitter', 'social', 'chat', 'bot', 'webhook', 'slack', 'message', 'notify'],
+    'Display': ['screen', 'display', 'ui', 'theme', 'face', 'font', 'oled', 'ink', 'led', 'view', 'clock', 'weather', 'status', 'mem', 'cpu', 'info'],
+    'Attack': ['pwn', 'crack', 'handshake', 'deauth', 'assoc', 'brute', 'attack', 'wardriving', 'pmkid', 'wpa', 'eapol', 'sniff'],
+    'Hardware': ['ups', 'battery', 'power', 'shutdown', 'reboot', 'button', 'switch', 'gpio', 'i2c', 'spi', 'bluetooth', 'ble', 'hw'],
+    'System': ['backup', 'ssh', 'log', 'update', 'fix', 'clean', 'config', 'manage', 'util', 'internet', 'wifi', 'connection']
 }
 
 def detect_category(name, description, code):
@@ -39,62 +43,68 @@ def detect_category(name, description, code):
     return max(scores, key=scores.get)
 
 def parse_python_content(code, filename, origin_url, internal_path=None):
-    try:
-        version_match = re.search(r"__version__\s*=\s*[\"'](.+?)[\"']", code)
-        author_match = re.search(r"__author__\s*=\s*[\"'](.+?)[\"']", code)
-        
-        version = version_match.group(1) if version_match else "0.0.1"
-        author = author_match.group(1) if author_match else "Unknown"
-        
-        desc_match = re.search(r"__description__\s*=\s*(?:['\"]([^'\"]+)['\"]|\(([^)]+)\))", code, re.DOTALL)
-        description = "No description provided."
-        if desc_match:
-            if desc_match.group(1): description = desc_match.group(1)
-            elif desc_match.group(2):
-                raw_desc = desc_match.group(2)
-                description = re.sub(r"['\"\n\r]", "", raw_desc)
-                description = re.sub(r"\s+", " ", description).strip()
+    data = {}
+    
+    # --- ROBUST REGEX FIX for Description ---
+    # This pattern captures the description regardless of single (') or double (") quotes
+    # and handles internal quotes by using a backreference (\1).
+    desc_match = re.search(r"__description__\s*=\s*([\"'])((?:(?!\1).)*)\1", code, re.DOTALL)
+    
+    # Check for version and author
+    version_match = re.search(r"__version__\s*=\s*['\"](.+?)['\"]", code)
+    author_match = re.search(r"__author__\s*=\s*['\"](.+?)['\"]", code)
 
-        category = detect_category(filename.replace(".py", ""), description, code)
+    data['version'] = version_match.group(1) if version_match else "0.0.1"
+    data['author'] = author_match.group(1) if author_match else "Unknown"
+    data['description'] = desc_match.group(2).strip() if desc_match else "No description provided."
+    
+    # Determine category
+    data['category'] = detect_category(filename.replace(".py", ""), data['description'], code)
 
-        if description != "No description provided." or version != "0.0.1":
-            return {
-                "name": filename.replace(".py", ""),
-                "version": version,
-                "description": description,
-                "author": author,
-                "category": category,
-                "origin_type": "zip" if internal_path else "single",
-                "download_url": origin_url,
-                "path_inside_zip": internal_path
-            }
-    except Exception as e:
-        print(f"[!] Error parsing {filename}: {e}")
+    if data['description'] != "No description provided." or data['version'] != "0.0.1":
+        return {
+            "name": filename.replace(".py", ""),
+            "version": data['version'],
+            "description": data['description'],
+            "author": data['author'],
+            "category": data['category'],
+            "origin_type": "zip" if internal_path else "single",
+            "download_url": origin_url,
+            "path_inside_zip": internal_path
+        }
     return None
 
 def process_zip_url(url):
     found = []
     try:
-        print(f"[*] Downloading ZIP: {url}...")
-        r = requests.get(url)
+        logging.info(f"[*] Downloading ZIP: {url}...")
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+        
         z = zipfile.ZipFile(io.BytesIO(r.content))
         
         for filename in z.namelist():
             if filename.endswith(".py") and "__init__" not in filename and "/." not in filename:
                 with z.open(filename) as f:
                     code = f.read().decode('utf-8', errors='ignore')
-                plugin = parse_python_content(code, filename.split("/")[-1], url, filename)
-                if plugin:
-                    print(f"   [+] {plugin['name']:<25} -> {plugin['category']}")
-                    found.append(plugin)
+                
+                # Simple check for plugin status
+                if 'from pwnagotchi.plugins import Plugin' in code or 'class ' in code and '(Plugin)' in code:
+                    plugin = parse_python_content(code, filename.split("/")[-1], url, filename)
+                    if plugin:
+                        logging.info(f"    [+] {plugin['name']:<25} -> {plugin['category']}")
+                        found.append(plugin)
+                
     except Exception as e:
-        print(f"   [!] ZIP Error: {e}")
+        logging.error(f"    [!] ZIP Error for {url}: {e}")
     return found
 
 def main():
+    print("--- PwnStore Builder v1.2 Starting ---")
     master_list = []
+    
     if not os.path.exists(INPUT_FILE):
-        print(f"Error: {INPUT_FILE} not found.")
+        logging.error(f"Error: {INPUT_FILE} not found.")
         return
 
     with open(INPUT_FILE, "r") as f:
@@ -106,19 +116,30 @@ def main():
             master_list.extend(plugins)
         else:
             try:
-                code = requests.get(url).text
+                # Handle single raw file URL
+                code = requests.get(url, timeout=15).text
                 plugin = parse_python_content(code, url.split("/")[-1], url, None)
                 if plugin:
-                    print(f"   [+] {plugin['name']:<25} -> {plugin['category']}")
+                    logging.info(f"    [+] {plugin['name']:<25} -> {plugin['category']}")
                     master_list.append(plugin)
-            except Exception as e: pass
+            except Exception as e: 
+                logging.error(f"    [!] Raw File Error for {url}: {e}")
 
-    # --- SORT ALPHABETICALLY ---
-    master_list.sort(key=lambda x: x['name'].lower())
+    # --- DEDUPLICATION AND SORT ---
+    # Using dictionary to keep the highest version of each plugin
+    final_plugins = {}
+    for plugin in master_list:
+        name_key = plugin['name'].lower()
+        if name_key not in final_plugins or plugin['version'] > final_plugins[name_key]['version']:
+            final_plugins[name_key] = plugin
+            
+    # Sort the final list alphabetically by name
+    sorted_plugins = sorted(final_plugins.values(), key=lambda p: p['name'].lower())
 
     with open(OUTPUT_FILE, "w") as f:
-        json.dump(master_list, f, indent=2)
-    print(f"\n[SUCCESS] Generated sorted registry with {len(master_list)} plugins.")
+        json.dump(sorted_plugins, f, indent=2)
+    
+    print(f"\n[SUCCESS] Generated sorted registry with {len(sorted_plugins)} unique plugins.")
 
 if __name__ == "__main__":
     main()
