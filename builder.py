@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import requests
 import json
 import re
@@ -45,33 +46,40 @@ def detect_category(name, description, code):
 def parse_python_content(code, filename, origin_url, internal_path=None):
     data = {}
     
-    # --- ROBUST REGEX FIX for Description ---
-    # This pattern captures the description regardless of single (') or double (") quotes
-    # and handles internal quotes by using a backreference (\1).
-    desc_match = re.search(r"__description__\s*=\s*([\"'])((?:(?!\1).)*)\1", code, re.DOTALL)
-    
-    # Check for version and author
-    version_match = re.search(r"__version__\s*=\s*['\"](.+?)['\"]", code)
-    author_match = re.search(r"__author__\s*=\s*['\"](.+?)['\"]", code)
+    try:
+        # --- ROBUST REGEX FIX for Description ---
+        # Captures content between matching quotes ("..." or '...') ignoring internal apostrophes.
+        desc_match = re.search(r"__description__\s*=\s*([\"'])((?:(?!\1).)*)\1", code, re.DOTALL)
+        
+        # Check for version and author (standard regex)
+        version_match = re.search(r"__version__\s*=\s*['\"](.+?)['\"]", code)
+        author_match = re.search(r"__author__\s*=\s*['\"](.+?)['\"]", code)
 
-    data['version'] = version_match.group(1) if version_match else "0.0.1"
-    data['author'] = author_match.group(1) if author_match else "Unknown"
-    data['description'] = desc_match.group(2).strip() if desc_match else "No description provided."
-    
-    # Determine category
-    data['category'] = detect_category(filename.replace(".py", ""), data['description'], code)
+        data['version'] = version_match.group(1) if version_match else "0.0.1"
+        data['author'] = author_match.group(1) if author_match else "Unknown"
+        data['description'] = desc_match.group(2).strip() if desc_match else "No description provided."
+        
+        # Determine category
+        data['category'] = detect_category(filename.replace(".py", ""), data['description'], code)
 
-    if data['description'] != "No description provided." or data['version'] != "0.0.1":
-        return {
-            "name": filename.replace(".py", ""),
-            "version": data['version'],
-            "description": data['description'],
-            "author": data['author'],
-            "category": data['category'],
-            "origin_type": "zip" if internal_path else "single",
-            "download_url": origin_url,
-            "path_inside_zip": internal_path
-        }
+        # Only return data if we found enough metadata
+        if data['description'] != "No description provided." or data['version'] != "0.0.1":
+            return {
+                "name": filename.replace(".py", ""),
+                "version": data['version'],
+                "description": data['description'],
+                "author": data['author'],
+                "category": data['category'],
+                "origin_type": "zip" if internal_path else "single",
+                "download_url": origin_url,
+                "path_inside_zip": internal_path
+            }
+        
+    except Exception as e:
+        # Silently fail here (pass) to prevent the build process from crashing 
+        # due to one broken file, while still logging the main process.
+        pass 
+        
     return None
 
 def process_zip_url(url):
@@ -88,12 +96,11 @@ def process_zip_url(url):
                 with z.open(filename) as f:
                     code = f.read().decode('utf-8', errors='ignore')
                 
-                # Simple check for plugin status
-                if 'from pwnagotchi.plugins import Plugin' in code or 'class ' in code and '(Plugin)' in code:
-                    plugin = parse_python_content(code, filename.split("/")[-1], url, filename)
-                    if plugin:
-                        logging.info(f"    [+] {plugin['name']:<25} -> {plugin['category']}")
-                        found.append(plugin)
+                # Assume any .py file that passes the filename filter is a plugin (lowering the strictness barrier)
+                plugin = parse_python_content(code, filename.split("/")[-1], url, filename)
+                if plugin:
+                    logging.info(f"    [+] {plugin['name']:<25} -> {plugin['category']}")
+                    found.append(plugin)
                 
     except Exception as e:
         logging.error(f"    [!] ZIP Error for {url}: {e}")
@@ -126,10 +133,10 @@ def main():
                 logging.error(f"    [!] Raw File Error for {url}: {e}")
 
     # --- DEDUPLICATION AND SORT ---
-    # Using dictionary to keep the highest version of each plugin
     final_plugins = {}
     for plugin in master_list:
         name_key = plugin['name'].lower()
+        # Keep the plugin if it's new, or if the current one is a higher version
         if name_key not in final_plugins or plugin['version'] > final_plugins[name_key]['version']:
             final_plugins[name_key] = plugin
             
