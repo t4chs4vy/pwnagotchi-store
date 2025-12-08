@@ -12,7 +12,7 @@
   {
     "name": "age",
     "version": "3.1.0",
-    "description": "An enhanced plugin with frequent titles, dynamic quotes, progress bars, random events, handshake streaks, personality evolution, and secret achievements. UI is optimized to avoid clutter.",
+    "description": "No description provided.",
     "author": "AlienMajik",
     "category": "Display",
     "origin_type": "zip",
@@ -21,8 +21,8 @@
   },
   {
     "name": "auto_backup",
-    "version": "1.2.1",
-    "description": "Backs up files when internet is available. Creates compressed, safe backups.",
+    "version": "2.0",
+    "description": "Backs up files and cleans up old backups to save space.",
     "author": "WPA2",
     "category": "System",
     "origin_type": "zip",
@@ -81,16 +81,6 @@
   },
   {
     "name": "clock",
-    "version": "1.0.2",
-    "description": "Clock/Calendar for pwnagotchi",
-    "author": "https://github.com/LoganMD",
-    "category": "Display",
-    "origin_type": "zip",
-    "download_url": "https://github.com/Sniffleupagus/pwnagotchi_plugins/archive/master.zip",
-    "path_inside_zip": "pwnagotchi_plugins-main/clock.py"
-  },
-  {
-    "name": "clock",
     "version": "1.0.3",
     "description": "Clock/Calendar for pwnagotchi",
     "author": "originally https://github.com/LoganMD redone by NeonLightning",
@@ -121,8 +111,8 @@
   },
   {
     "name": "discord",
-    "version": "2.3.0",
-    "description": "Sends Pwnagotchi handshakes and session summaries to Discord, with location data from WiGLE. Persists a local cache of WiGLE lookups.",
+    "version": "2.6.0",
+    "description": "Sends Pwnagotchi handshakes (w/ pcap) and reports Last Session stats on boot/mode switch.",
     "author": "WPA2",
     "category": "Social",
     "origin_type": "zip",
@@ -161,7 +151,7 @@
   },
   {
     "name": "enable_assocV2",
-    "version": "1.0.2.1",
+    "version": "1.0.2.2",
     "description": "Enable and disable ASSOC on the fly. Enabled when plugin loads, disabled when plugin unloads. No Touch screen here",
     "author": "evilsocket@gmail.com",
     "category": "Attack",
@@ -181,7 +171,7 @@
   },
   {
     "name": "enable_deauthV2",
-    "version": "1.0.1.1",
+    "version": "1.0.1.2",
     "description": "Enable and disable DEAUTH on the fly. Enabled when plugin loads, disabled when plugin unloads. No Touch screen here",
     "author": "Sniffleupagus",
     "category": "Attack",
@@ -313,7 +303,7 @@
     "name": "memtempV2",
     "version": "0.0.1",
     "description": "A plugin that will display memory, cpu usage, load, and temperature, can show as many as you want",
-    "author": "https://github.com/xenDE",
+    "author": "xenDE",
     "category": "Display",
     "origin_type": "zip",
     "download_url": "https://github.com/unitMeasure/pwn-plugins/archive/main.zip",
@@ -332,7 +322,7 @@
   {
     "name": "miyagi",
     "version": "1.0.0",
-    "description": "Manage AI training. Pwn on. Pwn off. (just kidding. always b pwn",
+    "description": "Manage AI training. Pwn on. Pwn off. (just kidding. always b pwn'in'!)",
     "author": "Sniffleupagus",
     "category": "System",
     "origin_type": "zip",
@@ -392,7 +382,7 @@
   {
     "name": "NoGPSPrivacy",
     "version": "0.0.2.6",
-    "description": "Privacy nightmare for devices that don",
+    "description": "Privacy nightmare for devices that don't have a GPS with additional improvements",
     "author": "glenn@pegden.com.com",
     "category": "GPS",
     "origin_type": "zip",
@@ -412,7 +402,7 @@
   {
     "name": "probenpwn",
     "version": "1.6.0",
-    "description": "Aggressively capture handshakes with two modes: Tactical (smart and efficient",
+    "description": "No description provided.",
     "author": "AlienMajik",
     "category": "Attack",
     "origin_type": "zip",
@@ -511,7 +501,7 @@
   },
   {
     "name": "sorted_pwn",
-    "version": "0.0.2.1",
+    "version": "0.0.2.2",
     "description": "List cracked passwords from any potfile found in the handshakes directory",
     "author": "37124354+dbukovac@users.noreply.github.com",
     "category": "Attack",
@@ -540,9 +530,29 @@
     "path_inside_zip": "pwnagotchi_plugins-main/speak_to_me.py"
   },
   {
+    "name": "tailscale",
+    "version": "1.0.0",
+    "description": "A configurable plugin to connect to a Tailscale network and sync handshakes.",
+    "author": "WPA2",
+    "category": "Display",
+    "origin_type": "zip",
+    "download_url": "https://github.com/wpa-2/Pwnagotchi-Plugins/archive/master.zip",
+    "path_inside_zip": "Pwnagotchi-Plugins-main/tailscale.py"
+  },
+  {
+    "name": "Tele_Pi",
+    "version": "1.3.1",
+    "description": "No description provided.",
+    "author": "WPA2",
+    "category": "Display",
+    "origin_type": "zip",
+    "download_url": "https://github.com/wpa-2/Pwnagotchi-Plugins/archive/master.zip",
+    "path_inside_zip": "Pwnagotchi-Plugins-main/Tele_Pi.py"
+  },
+  {
     "name": "theylive",
     "version": "1.2.0",
-    "description": "Sets up and installs gpsd to report lat/long on the screen and setup bettercap pcap gps logging. Added support for PwnDroid for GPS sharing via Android app over Bluetooth tether. Enhancements: Streamed GPSD data, retries, more fields, efficiency improvements.",
+    "description": "No description provided.",
     "author": "discord@rai68",
     "category": "Display",
     "origin_type": "zip",
@@ -594,7 +604,7 @@
     "version": "2.3",
     "description": "A wardriving plugin for pwnagotchi. Saves all networks seen and uploads data to WiGLE once internet is available",
     "author": "CyberArtemio",
-    "category": "Display",
+    "category": "GPS",
     "origin_type": "zip",
     "download_url": "https://github.com/cyberartemio/wardriver-pwnagotchi-plugin/archive/main.zip",
     "path_inside_zip": "wardriver-pwnagotchi-plugin-main/wardriver.py"
@@ -631,12 +641,22 @@
   },
   {
     "name": "wiglelocator",
-    "version": "1.0.0",
-    "description": "Fetches AP location data from WiGLE and saves it with handshake files",
+    "version": "2.0.1",
+    "description": "Async WiGLE locator with caching, offline queueing, and Web UI map",
     "author": "WPA2",
     "category": "GPS",
     "origin_type": "zip",
     "download_url": "https://github.com/wpa-2/Pwnagotchi-Plugins/archive/master.zip",
     "path_inside_zip": "Pwnagotchi-Plugins-main/wiglelocator.py"
+  },
+  {
+    "name": "wireguard",
+    "version": "1.9",
+    "description": "VPN Sync: Full backup on first run, then incremental only.",
+    "author": "WPA2",
+    "category": "Display",
+    "origin_type": "zip",
+    "download_url": "https://github.com/wpa-2/Pwnagotchi-Plugins/archive/master.zip",
+    "path_inside_zip": "Pwnagotchi-Plugins-main/wireguard.py"
   }
 ]
